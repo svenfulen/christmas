@@ -9,19 +9,31 @@ LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 void setup() {
   // set up the LCD's number of columns and rows:
   lcd.begin(16, 2);
-  // Print a message to the LCD.
+  //initialize analog pins 0-2 for button input
+  pinMode(A0, INPUT);
+  pinMode(A1, INPUT);
+  pinMode(A2, INPUT);
 }
 
-int daysLeft = dateDifference(2020, 10, 21, 2020, 11, 25);
-int currentYear = 2020;
-int currentMonth = 1;
-int currentDay = 1;
-int currentHour = 12;
-int currentMinute = 25;
+bool menuMode = true;
 
-void loop() {
-  lcd.setCursor(0,1);
-  lcd.print(daysLeft);
+//0 for section 1
+//1 for section 2
+//2 for section 3
+//3 for enter button
+int menuSection = 0;
+//0 for date menu
+//1 for time menu
+//2 for menu mode to be false
+int cursorMenu = +
+
+    countdown(); //counts one minute
+  }
+  else {
+    merryChristmas();
+  }
+}
+
 }
 
 //is it christmas or not
@@ -40,8 +52,14 @@ void dateMenu(){
   lcd.setCursor(0, 0);
   lcd.print("Set Date");
   lcd.setCursor(0, 1);
+  if (currentMonth < 10) {
+    lcd.print("0");
+  }
   lcd.print(currentMonth);
   lcd.print("/");
+  if (currentDay < 10) {
+    lcd.print("0");
+  }
   lcd.print(currentDay);
   lcd.print("/");
   lcd.print(currentYear);
@@ -54,10 +72,16 @@ void timeMenu(){
   lcd.setCursor(0, 0);
   lcd.print("Set Time");
   lcd.setCursor(0, 1);
+  if (currentHour < 10) {
+    lcd.print("0");
+  }
   lcd.print(currentHour);
   lcd.print(":");
+  if (currentMinute < 10) {
+    lcd.print("0");
+  }
   lcd.print(currentMinute);
-  lcd.print(" E");
+  lcd.print("      E");
 }
 
 //prints out merry christmas message
@@ -70,8 +94,8 @@ void merryChristmas(){
 }
 
 void countdown() {
-  //if there are more days left until christmas
-if (daysLeft > 0) {
+  //if it is not christmas
+if (!isChristmas()) {
   //the timer operates every one minute
   delay(60000);
   
@@ -102,12 +126,149 @@ else {
 
 }
 
+void displayScreen(){
+  lcd.clear();
+  lcd.print(daysLeft);
+  lcd.print (" DAYS");
+  lcd.setCursor(0,1);
+  lcd.print (24 - currentHour);
+  lcd.print (" HOURS");
+}
+
+
+
+
+
+
+
+void setupMenu(){
+  //gets input from the buttons
+  leftButtonState = digitalRead(A2);
+  middleButtonState = digitalRead(A1);
+  rightButtonState = digitalRead(A0);
+  
+  //if menu section is 0 set date
+  //if menu section is 1 set time
+  if (menuSection == 0) {
+    dateMenu();
+    delay(100);
+    }
+  else if (menuSection == 1) { 
+    timeMenu();
+    delay(100);
+    }
+  
+  //if middle button is pressed
+  if (middleButtonState == HIGH) {
+	//if the cursor is on the E
+    if (cursorMenu == 3) {
+		//if menu section is either 0 or 1
+		if (menuSection < 2){
+			menuSection = menuSection + 1;
+			delay(200);
+		}
+		//if menu section is 2 exit menu and go to countdown
+		else {
+      daysLeft = dateDifference(currentYear, currentMonth, currentDay, currentYear, 11, 25);
+			menuMode = false;
+		}
+    }
+  }
+  //if left button is presed
+  else if (leftButtonState == HIGH) {
+	  
+	//if the date menu is active
+	if (menuSection == 0) {
+		switch (cursorMenu) {
+			case 0:
+        if (currentMonth < 13) {
+				currentMonth = currentMonth + 1;
+        }
+        else { currentMonth = 1; }
+				delay(200);
+			break;
+			case 1:
+        if (currentDay < 32) {
+				currentDay = currentDay + 1;
+        }
+        else { currentDay = 1; }
+				delay(200);
+			break;
+			case 2:
+				currentYear = currentYear + 1;
+				delay(200);
+			break;
+			default:
+      break;
+	}
+	}
+	//if the time menu is active
+	else if (menuSection == 1) {
+    //sets the month correctly for date comparison
+    currentMonth = currentMonth - 1;
+    
+		switch (cursorMenu) {
+			case 0:
+				if (currentHour < 24) {
+					currentHour = currentHour + 1;
+					delay(200);
+				}
+				else {
+					currentHour = 0;
+				}
+			break;
+			case 1:
+				if (currentMinute < 60) {
+					currentMinute = currentMinute + 1;
+					delay(200);
+				}
+				else {
+					currentMinute = 0;
+          delay(200);
+				}
+			break;
+			default:
+      break;
+	}
+
+  }
+  
+  }
+  //if right button is pressed
+  else if (rightButtonState == HIGH){
+	if (cursorMenu < 4) {
+		cursorMenu = cursorMenu + 1;
+		delay(200);
+	}
+	else {
+		cursorMenu = 0;
+		delay(200);
+	}
+	  
+	  
+  }
+  
+  //if no button is pressed
+  else {
+    //all buttons are off
+    digitalWrite(A0, LOW);
+    digitalWrite(A1, LOW);
+    digitalWrite(A2, LOW);
+  }
+}
+
+
+
+
+
+
+
+
+
+
 //DATE DIFFERENCE
 //
 //
-
-
-/*Days are defined 0-6, 0 being Sunday and 6 being Saturday.*/
 
 //Returns true if it is a leap year
 bool isLeapYear(int year) {
