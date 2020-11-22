@@ -1,0 +1,6 @@
+get time from user input (vars)
+
+calculate time between now and christmas (calendar class)
+
+start regular clock
+start countdown clock
